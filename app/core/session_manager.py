@@ -16,13 +16,13 @@ class SessionManager:
     ):
         self.request = request
         self.session = session
-        self.pagination: Optional[dict] = {"limit": 100_000_000, "page": 1}
+
 
     def inject(self, service_cls: Type[T], repository_cls: Type[Any]) -> T:
         """
         repository_cls를 사용해 repository를 생성한 후,
-        request & session을 주입한 service_cls를 반환
+        session을 주입한 service_cls를 반환
         """
-        repository = repository_cls(self.session, self.pagination)
-        service = service_cls(self.request, repository)  # type: ignore
+        repository = repository_cls(self.session)
+        service = service_cls(repository)  # type: ignore
         return service
