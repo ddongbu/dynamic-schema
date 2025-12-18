@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
-from functools import partial
 from typing import Dict
 
 from sqlalchemy.ext.asyncio import async_scoped_session, async_sessionmaker, AsyncSession, create_async_engine
@@ -53,62 +52,59 @@ class DatabaseSessionManager:
             await session.close()
 
     async def fetch_first(self, db, query):
-        session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.scalars(query)
             return result.first()
 
     async def fetch_one(self, db, query):
-        session: async_scoped_session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.execute(query)
             return result.scalars().one_or_none()
 
     async def fetch_unique(self, db, query):
-        session: async_scoped_session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.execute(query)
             return result.unique().all()
 
     async def fetch_join_first(self, db, query):
-        session: async_scoped_session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.execute(query)
             return result.first()
 
     async def fetch_join_all(self, db, query):
-        session: async_scoped_session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.execute(query)
             return result.all()
 
     async def fetch_all(self, db, query):
-        session: async_scoped_session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.execute(query)
             return result.scalars().all()
 
     async def fetch_unique_all(self, db, query):
-        session: async_scoped_session = self.session.get(db)
-        async with session() as read_session:
+        async with self.get_session(db) as read_session:
             result = await read_session.scalars(query)
             return result.unique().all()
 
-
-@asynccontextmanager
-async def get_db_session(self, db_name: str):
-    async with self.get_session(db_name) as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception as e:
-            await session.rollback()
-            raise e
-        finally:
-            await session.close()
+    @asynccontextmanager
+    async def get_db_session(self, db_name: str = "DB"):
+        async with self.get_session(db_name) as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception as e:
+                await session.rollback()
+                raise e
+            finally:
+                await session.close()
 
 
 # 전역 세션 매니저 인스턴스
 db_manager = DatabaseSessionManager()
-get_database_session = partial(get_db_session, "DB")
+
+
+# FastAPI Dependency로 사용할 함수
+async def get_database_session():
+    async with db_manager.get_db_session() as session:
+        yield session
 
