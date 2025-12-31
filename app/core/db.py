@@ -15,7 +15,7 @@ class DatabaseSessionManager:
             "DB": create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI),
                                           pool_pre_ping=True,
                                           pool_recycle=600,
-                                          echo=True)
+                                          echo=False)
         }
 
         self._async_session_factory = {
