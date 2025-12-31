@@ -8,7 +8,6 @@ T = TypeVar('T')
 class BaseResponse(BaseModel, Generic[T]):
     message: str
     data: Optional[T] = None
-    page_info: Optional[dict] = None
 
     class Config:
         arbitrary_types_allowed = True
