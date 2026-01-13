@@ -20,3 +20,9 @@ class UserRes(BaseUser):
 
 class UserReq(BaseUser):
     ...
+
+
+class UserUpdateReq(SchemaConfig):
+    username: Optional[str] = Field(default=None, description="이름", alias="username")
+    group_id: Optional[int] = Field(default=None, description="그룹 KEY", alias="group_id")
+    role: int = Field(description="권한", alias="role")

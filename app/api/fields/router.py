@@ -11,40 +11,44 @@ from app.core.session_manager import SessionManager
 
 router = APIRouter()
 
-# 내 그룹의 필드 조회
+
 @router.get("/{user_group_id}", response_model=BaseResponse[Dict[str, List[FieldsRes]]])
 async def get_field_list(
-    user_group_id: int
+    user_group_id: int,
 ):
     data = await service.get_all_fields(user_group_id)
     return BaseResponse(message="SUCCESS", data={"list": data})
 
-# 그룹 추가
+
 @router.post("/{user_group_id}")
 async def post_field(
-        req: FieldsReq,
-        session_manager: SessionManager = Depends()
+    user_group_id: int,
+    req: FieldsReq,
+    session_manager: SessionManager = Depends()
 ):
-
     base_field_service = session_manager.inject(BaseFieldsService, BaseFieldRepository)
-    await base_field_service.create_field(req)
+    await base_field_service.create_field(req, user_group_id)
+    return BaseResponse(message="SUCCESS")
 
-# 필드 수정
-@router.patch("/{user_group_id}")
+
+@router.patch("/{user_group_id}/{field_id}")
 async def patch_field(
-        req: FieldsReq,
-        session_manager: SessionManager = Depends()
+    user_group_id: int,
+    field_id: int,
+    req: FieldsReq,
+    session_manager: SessionManager = Depends(),
 ):
-    #TODO: user_group_id 검증이 필요함.
     base_field_service = session_manager.inject(BaseFieldsService, BaseFieldRepository)
-    await base_field_service.patch_field(req)
+    await base_field_service.patch_field(req, user_group_id, field_id)
+    return BaseResponse(message="SUCCESS")
 
-# 필드 삭제
-@router.delete("/{user_group_id}")
+
+@router.delete("/{user_group_id}/{field_id}")
 async def delete_field(
-        user_group_id: int,
-        session_manager: SessionManager = Depends()
+    user_group_id: int,
+    field_id: int,
+    session_manager: SessionManager = Depends(),
 ):
-    # TODO: 관리자 검증 필요
     base_field_service = session_manager.inject(BaseFieldsService, BaseFieldRepository)
-    await base_field_service.delete_field(user_group_id)
+    await base_field_service.delete_field(field_id, user_group_id)
+    return BaseResponse(message="SUCCESS")
